@@ -1,0 +1,157 @@
+.data 
+FreqTable: .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+firstmsg: .asciiz "Hi! Enter the size of the array to be determined:  \n"
+secondmsg: .asciiz " Enter the elements of the array: \n"
+comma: .asciiz "   ,  "
+space: .asciiz "  "
+newline: .asciiz "\n"
+resultmsg: .asciiz "\nFrequency Table:"
+.text 
+
+main:
+    li $v0, 4
+    la $a0, firstmsg
+    syscall 
+
+    li $v0, 5
+    syscall
+    move $s2, $v0
+
+    jal CreateArray
+    addi $s0, $t0, 0
+
+    move $t1, $s0
+    jal PrintArray
+
+    move $v1, $s0          #  address
+    move $a1, $s2          #  size
+    la $a2, FreqTable      # FreqTable address
+    jal FindFreq
+
+    li $v0, 4
+    la $a0, resultmsg
+    syscall
+
+    jal PrintFreqTable
+
+    li $v0, 10
+    syscall
+
+InitializeArray:
+    addi $t1, $zero, 0
+
+    li $v0, 4
+    la $a0, secondmsg
+    syscall 
+
+    move $t3, $t0
+while:
+    beq $t1, $s2, end_initialize
+    li $v0, 5
+    syscall
+    move $t2, $v0
+    sw $t2, 0($t3) 
+
+    addi $t3, $t3, 4
+    addi $t1, $t1, 1
+    j while
+
+end_initialize:
+    jr $ra
+
+CreateArray:
+    addi $sp, $sp, -4
+    sw $ra, 0($sp) 
+
+    mul $t0, $s2, 4 
+
+    li $v0, 9
+    move $a0, $t0
+    syscall 
+
+    move $t0, $v0
+
+    jal InitializeArray
+
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
+    jr $ra
+
+PrintArray:
+    li $v0, 4
+    la $a0, newline
+    syscall
+
+    addi $t0, $s2, 0
+loop:
+    beqz $t0, done_print
+    li $v0, 1
+    lw $a0, 0($t1)
+    syscall
+
+    li $v0, 4
+    la $a0, comma
+    syscall
+
+    addi $t1, $t1, 4
+    subi $t0, $t0, 1
+
+    j loop
+
+done_print:
+    jr $ra
+
+FindFreq:
+    addi $t1, $zero, 0
+    li $t2, 0
+    la $t3, FreqTable
+
+freq_loop:
+    beq $t1, $a1, end_findfreq
+
+    lw $t0, 0($v1)
+
+    blt $t0, 0, freq_other
+    bgt $t0, 9, freq_other
+
+    mul $t4, $t0, 4
+    add $t4, $t4, $t3
+
+    lw $t2, 0($t4)
+    addi $t2, $t2, 1
+    sw $t2, 0($t4)
+    j freq_done
+
+freq_other:
+    lw $t2, 40($t3)
+    addi $t2, $t2, 1
+    sw $t2, 40($t3)
+    j freq_done
+
+freq_done:
+    addi $t1, $t1, 1
+    addi $v1, $v1, 4
+    j freq_loop
+
+end_findfreq:
+    jr $ra
+
+PrintFreqTable:
+	la $t0, FreqTable
+	li $t1, 11
+
+	print_loop:
+		lw $t2, 0($t0)
+		li $v0, 1
+		syscall
+
+		li $v0, 4
+		la $a0, space
+		syscall
+
+		addi $t0, $t0, 4
+		addi $t1, $t1, -1
+		bnez $t1, print_loop
+
+		li $v0, 10
+		syscall

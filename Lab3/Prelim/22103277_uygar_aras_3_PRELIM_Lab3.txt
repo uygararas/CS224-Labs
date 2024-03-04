@@ -1,0 +1,293 @@
+Uygar Aras
+22103277
+CS 224 Section 3
+Lab 3
+
+.data
+nodeSpace:  .space 1000
+summarySpace:  .space 1000
+str_key:    .asciiz "Enter key (product number, -1 to stop): "
+str_data:   .asciiz "Enter data (copies sold): "
+str_display:.asciiz "Node: ("
+str_comma:  .asciiz ", "
+str_end:    .asciiz ")\n"
+
+.text
+main:
+    la $t6, nodeSpace
+    move $t7, $t6
+
+    input_loop:
+        li $v0, 4
+        la $a0, str_key
+        syscall
+        li $v0, 5
+        syscall
+        move $t0, $v0
+
+        beq $t0, -1, process_data
+
+        li $v0, 4
+        la $a0, str_data
+        syscall
+        li $v0, 5
+        syscall
+        move $t1, $v0
+
+        move $a0, $t0
+        move $a1, $t1
+        move $a2, $t7
+        jal insertNode
+        move $t7, $v0
+
+        j input_loop
+
+process_data:
+    move $a0, $t6
+    jal displayList
+
+    move $a0, $t8
+    jal displayList
+
+    la $t6, nodeSpace
+    move $t7, $t6
+    la $t9, summarySpace
+
+    j input_loop
+
+insertNode:
+    sw $a0, 0($a2)
+    sw $a1, 4($a2)
+    addiu $t6, $t6, 12
+    sw $t6, 8($a2)
+    move $v0, $t6
+    jr $ra
+
+displayList:
+    display_loop:
+        lw $t0, 0($a0)
+        lw $t1, 4($a0)
+
+        beq $t0, 0, display_end
+
+        li $v0, 4
+        la $a1, str_display
+        syscall
+
+        li $v0, 1
+        move $a0, $t0
+        syscall
+
+        li $v0, 4
+        la $a1, str_comma
+        syscall
+
+        li $v0, 1
+        move $a0, $t1
+        syscall
+
+        li $v0, 4
+        la $a1, str_end
+        syscall
+
+        lw $a0, 8($a0)
+        j display_loop
+
+    display_end:
+    j display_loop
+
+generateSummary:
+    la $t9, summarySpace
+    move $t8, $t9
+
+    summary_loop:
+        lw $t0, 0($a0)
+        beq $t0, $zero, finish_summary
+
+        move $a1, $t0
+        move $a2, $t9
+        jal keyInSummary
+        move $t2, $v0
+
+        beq $t2, 1, skip_insert
+
+        lw $t1, 4($a0)
+
+        sum_loop:
+            lw $t3, 8($a0)
+            beq $t3, $zero, done_sum
+
+            move $a0, $t3
+            lw $t4, 0($a0)
+            beq $t4, $t0, continue_sum
+
+            j done_sum
+
+            continue_sum:
+            lw $t4, 4($a0)
+            add $t1, $t1, $t4
+            j sum_loop
+
+        done_sum:
+        move $a0, $t0
+        move $a1, $t1
+        move $a2, $t8
+        jal insertNode
+        move $t8, $v0
+
+        skip_insert:
+        lw $a0, 8($a0)
+        j summary_loop
+
+    finish_summary:
+    move $v0, $t9
+    jr $ra
+
+keyInSummary:
+    check_loop:
+        lw $t5, 0($a2)
+        beq $t5, $zero, not_found
+
+        beq $t5, $a1, found
+        lw $a2, 8($a2)
+        j check_loop
+
+    found:
+    li $v0, 1
+    jr $ra
+
+    not_found:
+    li $v0, 0
+    jr $ra
+
+
+
+.data
+	registerQ: .asciiz "Please enter the register number you want to see its use count: "
+	result: .asciiz "Use count of your register in the subprogram is "
+	execution: .asciiz "The register number you entered is out of range."
+
+.text
+	main:
+		li $v0,4
+		la $a0,registerQ
+		syscall	
+	
+		li $v0,5
+		syscall
+	
+		move $a2,$v0
+		
+		addi $t7,$zero,31
+		
+		bgt $a2,$t7,execute
+		bltz $a2,execute
+		
+		la $a0,L1
+		la $a1,L2
+	
+		jal count
+		
+		move $t5,$v1
+	
+		li $v0,4
+		la $a0,result
+		syscall
+		
+		li $v0,1
+		move $a0,$t5
+		syscall
+	
+		li $v0,10
+		syscall
+	
+	count:
+L1:		addi $sp, $sp,-36 
+		sw $s7,32($sp)
+		sw $s6,28($sp)
+		sw $s5,24($sp)
+		sw $s4,20($sp)
+		sw $s3,16($sp)
+		sw $s2,12($sp)
+		sw $s1,8($sp)
+		sw $s0,4($sp)
+		sw $ra,0($sp)
+		
+		addi $s0,$a2,0
+		addi $s1,$a0,0 
+		addi $s2,$a1,0
+		addi $s7,$zero,0
+			
+		next:
+			bge $s1,$s2,done
+			lw $s3,0($s1)
+			addi $s4,$s3,0
+			srl $s4,$s4,26
+			beqz $s4,checkForR
+			
+			main01:
+			bnez $s4,checkForI
+			
+			main02:
+			contAll:
+			addi $s1,$s1,4
+			j next
+			
+			checkForR:
+				addi $s4,$s3,0
+				sll $s4,$s4,6
+				srl $s4,$s4,27
+				bne $s4,$s0,cont1
+				addi $s7,$s7,1
+				cont1:
+				addi $s4,$s3,0
+				sll $s4,$s4,11
+				srl $s4,$s4,27
+				bne $s4,$s0,cont2
+				addi $s7,$s7,1
+				cont2:
+				addi $s4,$s3,0
+				sll $s4,$s4,16
+				srl $s4,$s4,27
+				bne $s4,$s0,cont3
+				addi $s7,$s7,1
+				cont3:
+				j contAll
+				
+			checkForI:
+				addi $s4,$s3,0
+				sll $s4,$s4,6
+				srl $s4,$s4,27
+				bne $s4,$s0,cont4
+				addi $s7,$s7,1
+				cont4:
+				addi $s4,$s3,0
+				sll $s4,$s4,11
+				srl $s4,$s4,27
+				bne $s4,$s0,cont5
+				addi $s7,$s7,1
+				cont5:
+				j contAll
+							
+		done:
+			addi,$v1,$s7,0
+			lw $ra,0 ($sp)
+		    	lw $s0,4($sp)
+		    	lw $s1,8($sp)
+		    	lw $s2,12($sp)
+		    	lw $s3,16($sp)
+		    	lw $s4,20($sp)
+		    	lw $s5,24($sp)
+		    	lw $s6,28($sp)
+		    	lw $s0,32($sp)
+L2:		 	addi $sp,$sp,36		
+			
+			jr $ra
+
+	execute:
+		li $v0,4
+		la $a0,execution
+		syscall	
+		
+		li $v0,10
+		syscall

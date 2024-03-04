@@ -1,0 +1,199 @@
+Uygar Aras
+22103277
+Lab 1 Section 3
+
+
+.text
+.globl __start
+__start:
+	li $v0, 4
+	la $a0, promptB
+	syscall
+	li $v0, 5
+	syscall
+	sw $v0, B
+	li $v0, 4
+	la $a0, promptC
+	syscall
+	li $v0, 5
+	syscall
+	sw $v0, C
+	
+	li $v0, 4
+	la $a0, promptD
+	syscall
+	li $v0, 5
+	syscall
+	sw $v0, D
+	
+	lw $t0, B
+	lw $t1, C
+	lw $t2, D
+	addi $t7,$t7,2
+	
+	mul $t4, $t0, $t2
+	div $t4, $t7
+	mflo $t4
+	addi $t4, $t4, 5
+	sub $t4, $t4, $t0
+	div $t4, $t1
+	mfhi $t8
+	
+	li $v0, 4
+	la $a0, resultA
+	syscall
+	
+	li $v0, 1
+	move $a0, $t8
+	syscall
+	
+	li $v0, 10
+	syscall
+
+.data
+B: .word 0
+C: .word 0
+D: .word 0
+promptB: .asciiz "Enter value for B:\n"
+promptC: .asciiz "Enter value for C:\n"
+promptD: .asciiz "Enter value for D:\n"
+resultA: .asciiz "Result A: "
+
+
+
+.text
+.globl __start
+    li $v0, 4
+    la $a0, promptSize
+    syscall
+
+    li $v0, 5
+    syscall
+    sw $v0, size
+
+    jal fillArray
+
+__start:
+    li $v0, 4
+    la $a0, menu
+    syscall
+
+    li $v0, 5
+    syscall
+    move $t0, $v0
+
+    beq $t0, 1, findMax
+    beq $t0, 2, countMax
+    beq $t0, 3, countDivisible
+    beq $t0, 4, exitProgram
+
+findMax:
+    lw $t1, size
+    li $t2, 0
+    la $t3, array
+
+    lw $t5, 0($t3)
+
+findMaxLoop:
+    beq $t2, $t1, findMaxEnd
+    lw $t4, 0($t3)
+
+    bge $t5, $t4, findMaxNext
+    move $t5, $t4
+
+findMaxNext:
+    addi $t2, $t2, 1
+    addi $t3, $t3, 4
+    j findMaxLoop
+
+findMaxEnd:
+    sw $t5, maxValue
+
+    li $v0, 1
+    move $a0, $t5
+    syscall
+    j __start
+
+countMax:
+    lw $t1, size
+    li $t2, 0
+    li $t3, 0
+    la $t4, array
+    lw $t5, maxValue
+
+countMaxLoop:
+    beq $t2, $t1, countMaxEnd
+    lw $t6, 0($t4)
+    beq $t6, $t5, countMaxIncrement
+
+countMaxNext:
+    addi $t2, $t2, 1
+    addi $t4, $t4, 4
+    j countMaxLoop
+
+countMaxIncrement:
+    addi $t3, $t3, 1
+    j countMaxNext
+
+countMaxEnd:
+    li $v0, 1
+    move $a0, $t3
+    syscall
+    j __start
+
+countDivisible:
+    lw $t1, size
+    li $t2, 0
+    li $t3, 0
+    la $t4, array
+    lw $t5, maxValue
+
+countDivisibleLoop:
+    beq $t2, $t1, countDivisibleEnd
+    lw $t6, 0($t4)
+    beq $t6, $t5, countDivisibleNext
+
+    div $t6, $t5, $t6
+    mfhi $t7
+    beqz $t7, countDivisibleIncrement
+
+countDivisibleNext:
+    addi $t2, $t2, 1
+    addi $t4, $t4, 4
+    j countDivisibleLoop
+
+countDivisibleIncrement:
+    addi $t3, $t3, 1
+    j countDivisibleNext
+
+countDivisibleEnd:
+    li $v0, 1
+    move $a0, $t3
+    syscall
+    j __start
+
+exitProgram:
+    li $v0, 10
+    syscall
+
+fillArray:
+    la $t0, array
+    lw $t1, size
+    la $a0, promptElem
+
+fillArrayLoop:
+    beq $t1, $zero, fillArrayEnd
+    li $v0, 4
+    syscall
+
+    li $v0, 5
+    syscall
+    sw $v0, 0($t0)
+
+    addi $t0, $t0, 4
+    subi $t1, $t1, 1
+    j fillArrayLoop
+
+fillArrayEnd:
+    jr $ra
+

@@ -1,0 +1,135 @@
+Uygar Aras
+22103277
+Section 3
+.data
+    prompt1:    .asciiz "Enter the first 32-bit value: "
+    prompt2:    .asciiz "Enter the second 32-bit value: "
+    resultMsg:  .asciiz "The Hamming distance is: "
+    continueMsg: .asciiz "\nDo you want to continue? (1 for Yes, 0 for No): "
+    newline:    .asciiz "\n"
+
+.text
+    .globl main
+
+main:
+    # Continue loop
+    continue_loop:
+        li $v0, 4
+        la $a0, prompt1
+        syscall
+
+        li $v0, 5
+        syscall
+        move $t0, $v0
+
+        li $v0, 4
+        la $a0, prompt2
+        syscall
+
+        li $v0, 5
+        syscall
+        move $t1, $v0
+
+        jal hamming_distance
+
+        li $v0, 4
+        la $a0, resultMsg
+        syscall
+
+        move $a0, $t2
+        li $v0, 1
+        syscall
+
+        # Ask user if they want to continue
+        li $v0, 4
+        la $a0, continueMsg
+        syscall
+
+        # Read user input
+        li $v0, 5
+        syscall
+        move $t3, $v0
+
+        beq $t3, 1, continue_loop  # If user wants to continue, repeat the loop
+
+        # Exit the program
+        li $v0, 10
+        syscall
+
+# Function to calculate Hamming distance
+hamming_distance:
+    xor $v0, $t0, $t1
+    li $t2, 0
+
+hamming_loop:
+    andi $t3, $v0, 1
+    add $t2, $t2, $t3
+
+    srl $v0, $v0, 1
+
+    bnez $v0, hamming_loop
+
+    jr $ra
+
+Uygar Aras
+22103277
+Section 3
+.data
+    prompt: .asciiz "Enter a value: "
+    continue_prompt: .asciiz "\nDo you want to continue? (Enter 1 for yes, 0 for no): "
+    newLine: .asciiz "\n"
+
+.text
+    main:
+        continue_loop:
+            li $v0, 4         
+            la $a0, prompt    
+            syscall
+
+
+            li $v0, 5         
+            syscall
+            move $t0, $v0     
+
+            li $v0, 1      
+            move $a0, $t0      
+            syscall
+
+	    li $v0, 4           
+            la $a0, newLine
+            syscall
+
+         
+            jal reverseBits
+
+            li $v0, 34         
+            move $a0, $t0   
+            syscall
+
+            li $v0, 4          
+            la $a0, continue_prompt
+            syscall
+
+            li $v0, 5           
+            syscall
+            
+            move $t1, $v0       
+            beq $t1, 1, continue_loop
+       	    li $v0, 10        
+            syscall
+            
+reverseBits:
+        li $t1, 0  
+        li $t2, 31     
+reverseLoop:
+        andi $t3, $t0, 1   
+        sll $t1, $t1, 1    
+        or $t1, $t1, $t3    
+        srl $t0, $t0, 1  
+        sub $t2, $t2, 1
+        bgez $t2, reverseLoop
+        move $t0, $t1
+        jr $ra    
+Uygar Aras
+22103277
+Section 3  

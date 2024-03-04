@@ -1,0 +1,88 @@
+CS224
+LAB 7
+SEC 3
+----------------
+Feza Emir Çelik
+22101910
+----------------
+Uygar Aras
+22103277
+----------------
+// Hexadecimal values for digits in 7 segment
+unsigned char binary_pattern[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
+
+// Function to wait for a certain period of time
+void Wait() {
+    Delay_ms(1000); // 1-second delay
+}
+int number;
+int main() {
+    AD1PCFG = 0xFFFF; // Configure AN pins as digital I/O
+    JTAGEN_bit = 0;   // Disable JTAG
+    TRISA = 0x00;     // Set Port A as output to digits
+    TRISE = 0x00;     // Set Port E as output to control 7-segment display segments
+
+    number = 1234; // Starting number
+
+    while (1) {
+        // Extract individual digits of the number
+        int firstD = number / 1000;          // Extract thousands digit
+        int secondD = (number / 100) % 10;   // Extract hundreds digit
+        int thirdD = (number / 10) % 10;     // Extract tens digit
+        int fourthD = number % 10;           // Extract ones digit
+
+        // Turn on all digits (you need to change this according to your hardware specifics)
+        PORTE = 0x0F;  // Assuming PORTE bits 0-3 control the digit being displayed and it's a common cathode display
+
+        // Set the segments for each digit
+        PORTA = binary_pattern[firstD];  // Set segments for the first digit
+        // Additional code here to actually display this digit, may involve multiplexing
+        PORTA = binary_pattern[secondD]; // Set segments for the second digit
+        // Additional code here to actually display this digit, may involve multiplexing
+        PORTA = binary_pattern[thirdD];  // Set segments for the third digit
+        // Additional code here to actually display this digit, may involve multiplexing
+        PORTA = binary_pattern[fourthD]; // Set segments for the fourth digit
+        // Additional code here to actually display this digit, may involve multiplexing
+
+        Wait(); // Wait for a second before incrementing the number
+
+        // Increment the number correctly
+        number = (number + 1) % 10000;
+        if ((number % 1000) == 0) number += 123; // Skip the leading 0s
+
+        // The condition to reset the number to 1234
+        if (number == 123) {
+            number = 1234;
+        }
+    }
+
+    return 0;
+}
+
+// Define a function for a pause in execution
+void PauseExecution() {
+  Delay_ms(1000); // Wait for 1 second
+}
+
+int main() {
+  AD1PCFG = 0xFFFF; // Set all analog pins to digital
+  DDPCONbits.JTAGEN = 0; // Turn off JTAG feature
+  TRISA = 0x0000; // Configure PORTA pins as outputs for LED control
+  TRISE = 0xFFFF; // Configure PORTE pins as inputs for button state reading
+
+  while (1) {
+    // Check the state of pushbuttons and set PORTA accordingly
+    if (!PORTEbits.RE1 && PORTEbits.RE0) {
+      PORTA = 0x0005; // If button 1 is pressed, set certain LEDs on
+    }
+    else if (!PORTEbits.RE0 && PORTEbits.RE1) {
+      PORTA = 0x0003; // If button 2 is pressed, set a different set of LEDs on
+    }
+    else {
+      PORTA = 0x0000; // If no buttons are pressed, turn off all control signals
+    }
+  }
+
+  // End of the main function
+  return 0;
+}

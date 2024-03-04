@@ -1,0 +1,185 @@
+Uygar Aras
+22103277
+Section 3 
+Fall 2023 Lab 1 Preliminary
+q1
+	.text
+	.globl	__start
+__start:
+	la $a0, intro
+	li $v0, 4
+	syscall
+	
+	la $a0, prompt1
+	li $v0, 4
+	syscall
+	
+	li $v0, 5
+	syscall
+	sw $v0, arraySize
+	
+	jal readItems
+	jal printItems
+	
+	la $a0, 0($t0)
+	jal reverseArrayContents
+	la $a0, result2
+	li $v0, 4
+	syscall
+	jal printItems
+	
+	li $v0, 10	
+	syscall
+
+readItems: 
+	la $t0, array
+	lw $t1, arraySize
+	la $a0, prompt2
+	li $v0, 4
+	syscall
+	readItem:
+		li $v0, 5
+		syscall
+		sw $v0, 0($t0)
+		addi $t0, $t0, 4
+		subi $t1, $t1, 1
+		bgt $t1, $zero, readItem
+	jr $ra
+
+printItems: 
+	la $t0, array
+	lw $t1, arraySize
+	la $a0, result1
+	li $v0, 4
+	syscall
+	printItem:
+		beq $t1, 1, printWithoutSeparator
+		lw $a0, 0($t0)
+		li $v0, 1
+		syscall
+		la $a0, separator
+		li $v0, 4
+		syscall
+		j continue
+		printWithoutSeparator:
+			lw $a0, 0($t0)
+			li $v0, 1
+			syscall
+		continue:
+			addi $t0, $t0, 4
+			subi $t1, $t1, 1
+			bgt $t1, $zero, printItem
+	jr $ra
+	
+reverseArrayContents: 
+	subi $t0, $a0, 4
+	la $t1, array
+	reverseItems:
+		lw $t2, 0($t1)
+		lw $t3, 0($t0)
+		sw $t2, 0($t0)
+		sw $t3, 0($t1)
+		sub $t2, $t0, $t1 
+		subi $t0, $t0, 4
+		addi $t1, $t1, 4
+		bge $t2, 4, reverseItems
+	jr $ra
+
+	      .data
+array:	      .space    80
+arraySize:    .word     0
+intro:	      .asciiz   "The program initializes, reverses and prints an array created by the user.\n"
+prompt1:      .asciiz   "Please enter the array size (must be between 1 and 20):\n"
+prompt2:      .asciiz   "Please enter the items one by one:\n"
+result1:      .asciiz   "The array contents:\n"
+result2:      .asciiz   "\nArray contents are reversed.\n"
+separator:    .asciiz   ", "
+
+q2
+
+
+	.text
+	.globl	__start
+__start:
+	# Input values for B, C, and D
+	li $v0, 4
+	la $a0, promptB
+	syscall
+	li $v0, 5
+	syscall
+	sw $v0, B
+	
+	li $v0, 4
+	la $a0, promptC
+	syscall
+	li $v0, 5
+	syscall
+	sw $v0, C
+	
+	li $v0, 4
+	la $a0, promptD
+	syscall
+	li $v0, 5
+	syscall
+	sw $v0, D
+	
+	# Calculate A
+	lw $t0, B
+	lw $t1, C
+	lw $t2, D
+	
+	# B / C
+	move $t3, $zero
+	move $t4, $t0
+	
+	divideLoop:
+		sub $t4, $t4, $t1
+		bgez $t4, divideLoop
+		addi $t3, $t3, 1
+	
+	# Save the result in $t3
+	move $t5, $t3
+	
+	# D mod B - C
+	move $t3, $zero
+	move $t4, $t2
+	
+	modLoop:
+		sub $t4, $t4, $t0
+		bgez $t4, modLoop
+		addi $t3, $t3, 1
+	
+	sub $t3, $t3, $t1
+	
+	# Save the result in $t3
+	move $t6, $t3
+	
+	# Add the two results
+	add $t7, $t5, $t6
+	
+	# B in $t0
+	# A = (result / B)
+	move $t8, $t7
+	
+	# Display the result A
+	li $v0, 4
+	la $a0, resultA
+	syscall
+	
+	li $v0, 1
+	move $a0, $t8
+	syscall
+	
+	# Exit
+	li $v0, 10
+	syscall
+
+	      .data
+B:            .word     0
+C:            .word     0
+D:            .word     0
+promptB:      .asciiz   "Enter value for B:\n"
+promptC:      .asciiz   "Enter value for C:\n"
+promptD:      .asciiz   "Enter value for D:\n"
+resultA:      .asciiz   "Result A: "
+
